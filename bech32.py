@@ -35,7 +35,20 @@ def _create_checksum(hrp: str, data: list[int], spec: int) -> list[int]:
 
 
 def encode(hrp: str, data: list[int], spec: int = 1) -> str:
-    """Encode data as a Bech32 (spec=1) or Bech32m (spec=0x2BC830A3) address."""
+    """Encode data as a Bech32 (spec=1) or Bech32m (spec=0x2BC830A3) address.
+
+    The human-readable part must follow BIP173: 1-83 US-ASCII characters,
+    each with a code in 33-126.
+
+    >>> encode("bc", [0, 1, 2])[:4]
+    'bc1q'
+    >>> encode("", [0, 1, 2])
+    Traceback (most recent call last):
+        ...
+    ValueError: invalid HRP
+    """
+    if not (1 <= len(hrp) <= 83) or not all(33 <= ord(c) <= 126 for c in hrp):
+        raise ValueError("invalid HRP")
     if not all(0 <= d < 32 for d in data):
         raise ValueError("data values must be 5-bit")
     combined = data + _create_checksum(hrp, data, spec)
